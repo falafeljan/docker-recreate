@@ -8,6 +8,7 @@ type Args struct {
   containerId string
   tagName string
   pullImage bool
+  deleteContainer bool
 }
 
 func parseFlags(args []string, defaultArgs *Args) (Args, int) {
@@ -20,6 +21,9 @@ func parseFlags(args []string, defaultArgs *Args) (Args, int) {
       switch arg[1] {
       case 'p':
         parsedFlags.pullImage = true
+
+      case 'd':
+        parsedFlags.deleteContainer = true
       }
 
       i = j
@@ -35,7 +39,8 @@ func parseArgs(args []string) (Args, error) {
   args = args[1:]
 
   defaultArgs := Args{
-    pullImage: false }
+    pullImage: false,
+    deleteContainer: false }
 
   parsedArgs, i := parseFlags(args, &defaultArgs)
   remainingArgs := len(args) - i
