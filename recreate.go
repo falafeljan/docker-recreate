@@ -31,7 +31,7 @@ func parseImageName(imageName string) (repository string, tag string) {
 
 func main() {
   if len(os.Args) < 2 {
-    fmt.Printf("Usage: %s [-p] id\n", os.Args[0])
+    fmt.Printf("Usage: %s [-p] id [tag]\n", os.Args[0])
     os.Exit(0)
   }
 
@@ -40,21 +40,32 @@ func main() {
 
   pullImage := os.Args[1] == "-p"
   containerId := os.Args[len(os.Args) - 1]
+  desiredTag := ""
+
+  if len(os.Args) == 4 {
+    containerId = os.Args[2]
+    desiredTag = os.Args[3]
+  }
 
   oldContainer, err := client.InspectContainer(containerId)
   checkError(err)
 
   // TODO delete _new if an error occures
 
-  repository, tag := parseImageName(oldContainer.Config.Image)
-  fmt.Printf("Image: %s:%s\n", repository, tag)
+  repository, currentTag := parseImageName(oldContainer.Config.Image)
+
+  if desiredTag == "" {
+    desiredTag = currentTag
+  }
+
+  fmt.Printf("Image: %s:%s\n", repository, desiredTag)
 
   if pullImage {
     fmt.Print("Pulling image...\n")
 
     err = client.PullImage(docker.PullImageOptions{
       Repository: repository,
-      Tag: tag }, docker.AuthConfiguration{})
+      Tag: desiredTag }, docker.AuthConfiguration{})
 
     checkError(err)
   }
@@ -68,6 +79,7 @@ func main() {
   var options docker.CreateContainerOptions
   options.Name = temporaryName
   options.Config = oldContainer.Config
+  options.Config.Image = repository + ":" + desiredTag
   options.HostConfig = oldContainer.HostConfig
   options.HostConfig.VolumesFrom = []string{oldContainer.ID}
 
