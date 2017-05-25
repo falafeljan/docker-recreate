@@ -18,19 +18,6 @@ func checkError(err error) {
   }
 }
 
-func parseImageName(imageName string) (repository string, tag string) {
-  sepIndex := strings.LastIndex(imageName, ":")
-
-  if sepIndex > -1 {
-    repository := imageName[:sepIndex]
-    tag := imageName[(sepIndex+1):]
-
-    return repository, tag
-  } else {
-    return imageName, "latest"
-  }
-}
-
 func main() {
   if len(os.Args) < 2 {
     fmt.Printf("Usage: %s [-p] id [tag]\n", os.Args[0])
@@ -40,34 +27,27 @@ func main() {
   client, err := docker.NewClientFromEnv()
   checkError(err)
 
-  pullImage := os.Args[1] == "-p"
-  containerId := os.Args[len(os.Args) - 1]
-  desiredTag := ""
+  args, err := parseArgs(os.Args)
 
-  if len(os.Args) == 4 {
-    containerId = os.Args[2]
-    desiredTag = os.Args[3]
-  }
-
-  oldContainer, err := client.InspectContainer(containerId)
+  oldContainer, err := client.InspectContainer(args.containerId)
   checkError(err)
 
   // TODO delete _new if an error occures
 
   repository, currentTag := parseImageName(oldContainer.Config.Image)
 
-  if desiredTag == "" {
-    desiredTag = currentTag
+  if args.tagName == "" {
+    args.tagName = currentTag
   }
 
-  fmt.Printf("Image: %s:%s\n", repository, desiredTag)
+  fmt.Printf("Image: %s:%s\n", repository, args.tagName)
 
-  if pullImage {
+  if args.pullImage {
     fmt.Print("Pulling image...\n")
 
     err = client.PullImage(docker.PullImageOptions{
       Repository: repository,
-      Tag: desiredTag }, docker.AuthConfiguration{})
+      Tag: args.tagName }, docker.AuthConfiguration{})
 
     checkError(err)
   }
@@ -84,7 +64,7 @@ func main() {
   var options docker.CreateContainerOptions
   options.Name = temporaryName
   options.Config = oldContainer.Config
-  options.Config.Image = repository + ":" + desiredTag
+  options.Config.Image = repository + ":" + args.tagName
   options.HostConfig = oldContainer.HostConfig
   options.HostConfig.VolumesFrom = []string{oldContainer.ID}
 
