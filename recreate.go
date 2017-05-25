@@ -31,27 +31,33 @@ func parseImageName(imageName string) (repository string, tag string) {
 
 func main() {
   if len(os.Args) < 2 {
-    fmt.Printf("Usage: %s id\n", os.Args[0])
+    fmt.Printf("Usage: %s [-p] id\n", os.Args[0])
     os.Exit(0)
   }
 
   endpoint := "unix:///var/run/docker.sock"
   client, _ := docker.NewClient(endpoint)
 
-  containerId := os.Args[1]
+  pullImage := os.Args[1] == "-p"
+  containerId := os.Args[len(os.Args) - 1]
 
   oldContainer, err := client.InspectContainer(containerId)
   checkError(err)
 
-  //TODO delete _new if an error occures
+  // TODO delete _new if an error occures
 
   repository, tag := parseImageName(oldContainer.Config.Image)
-  fmt.Printf("Pulling image: %s:%s\n", repository, tag)
+  fmt.Printf("Image: %s:%s\n", repository, tag)
 
-  err := client.PullImage(docker.PullImageOptions{
-    Repository: repository,
-    Tag: tag }, docker.AuthConfiguration{})
-  checkError(err)
+  if pullImage {
+    fmt.Print("Pulling image...\n")
+
+    err = client.PullImage(docker.PullImageOptions{
+      Repository: repository,
+      Tag: tag }, docker.AuthConfiguration{})
+
+    checkError(err)
+  }
 
   // TODO handle image tags/labels?
 
