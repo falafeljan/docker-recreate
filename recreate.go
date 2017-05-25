@@ -3,7 +3,9 @@ package main
 import (
   "fmt"
   "os"
+  "strconv"
   "strings"
+  "time"
 
   "github.com/fsouza/go-dockerclient"
   //"github.com/tonnerre/golang-pretty"
@@ -72,8 +74,11 @@ func main() {
 
   // TODO handle image tags/labels?
 
+  now := int(time.Now().Unix())
+  then := now - 1
+
   name := oldContainer.Name
-  temporaryName := name + "_new"
+  temporaryName := name + "_" + strconv.Itoa(now)
 
   // TODO possibility to add/change environment variables
   var options docker.CreateContainerOptions
@@ -100,15 +105,13 @@ func main() {
   }
   options.HostConfig.Links = links
 
-
   fmt.Println("Creating...")
   newContainer, err := client.CreateContainer(options)
   checkError(err)
 
-  // rename
   err = client.RenameContainer(docker.RenameContainerOptions{
     ID: oldContainer.ID,
-    Name: name + "_old" })
+    Name: name + "_" + strconv.Itoa(then) })
   checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
