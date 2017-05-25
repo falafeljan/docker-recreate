@@ -9,16 +9,29 @@ import (
   //"github.com/tonnerre/golang-pretty"
 )
 
-func check(err error) {
+func checkError(err error) {
   if err != nil {
     fmt.Println(err)
     os.Exit(0)
   }
 }
 
+func parseImageName(imageName string) (repository string, tag string) {
+  sepIndex := strings.LastIndex(imageName, ":")
+
+  if sepIndex > -1 {
+    repository := imageName[:sepIndex]
+    tag := imageName[(sepIndex+1):]
+
+    return repository, tag
+  } else {
+    return imageName, "latest"
+  }
+}
+
 func main() {
   if len(os.Args) < 2 {
-    fmt.Printf("Usage: %s id [tag]\n", os.Args[0])
+    fmt.Printf("Usage: %s id\n", os.Args[0])
     os.Exit(0)
   }
 
@@ -26,17 +39,19 @@ func main() {
   client, _ := docker.NewClient(endpoint)
 
   containerId := os.Args[1]
-  // imageTag := os.Args[2]
 
   oldContainer, err := client.InspectContainer(containerId)
-  check(err)
+  checkError(err)
 
   //TODO delete _new if an error occures
 
-  // TODO check to make sure rebuilt container is using updated image
-  // TODO pull image beforehand
-  // TODO parse image tag (none: latest?)
-  fmt.Printf("Image: %s\n", oldContainer.Config.Image)
+  repository, tag := parseImageName(oldContainer.Config.Image)
+  fmt.Printf("Pulling image: %s:%s\n", repository, tag)
+
+  err := client.PullImage(docker.PullImageOptions{
+    Repository: repository,
+    Tag: tag }, docker.AuthConfiguration{})
+  checkError(err)
 
   // TODO handle image tags/labels?
 
@@ -70,27 +85,27 @@ func main() {
 
   fmt.Println("Creating...")
   newContainer, err := client.CreateContainer(options)
-  check(err)
+  checkError(err)
 
   // rename
   err = client.RenameContainer(docker.RenameContainerOptions{
     ID: oldContainer.ID,
     Name: name + "_old" })
-  check(err)
+  checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
     ID: newContainer.ID,
     Name: name})
-  check(err)
+  checkError(err)
 
   if oldContainer.State.Running {
     fmt.Printf("Stopping old container\n")
     err = client.StopContainer(oldContainer.ID, 10)
-    check(err)
+    checkError(err)
 
     fmt.Printf("Starting new container\n")
     err = client.StartContainer(newContainer.ID, newContainer.HostConfig)
-    check(err)
+    checkError(err)
   }
 
   // TODO fallback to old container if error occured
