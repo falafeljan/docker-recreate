@@ -96,7 +96,10 @@ func main() {
   // TODO fallback to old container if error occured
   // TODO add option to remove old container on sucsess
 
-  fmt.Printf("Migrated from %s to %s\n", oldContainer.ID, newContainer.ID)
+  fmt.Printf(
+    "Migrated from %s to %s\n",
+    oldContainer.ID[:4],
+    newContainer.ID[:4])
 
   fmt.Println("Done")
 }
