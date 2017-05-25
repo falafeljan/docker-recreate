@@ -35,8 +35,8 @@ func main() {
     os.Exit(0)
   }
 
-  endpoint := "unix:///var/run/docker.sock"
-  client, _ := docker.NewClient(endpoint)
+  client, err := docker.NewClientFromEnv()
+  checkError(err)
 
   pullImage := os.Args[1] == "-p"
   containerId := os.Args[len(os.Args) - 1]
