@@ -18,19 +18,6 @@ func checkError(err error) {
   }
 }
 
-func parseImageName(imageName string) (repository string, tag string) {
-  sepIndex := strings.LastIndex(imageName, ":")
-
-  if sepIndex > -1 {
-    repository := imageName[:sepIndex]
-    tag := imageName[(sepIndex+1):]
-
-    return repository, tag
-  } else {
-    return imageName, "latest"
-  }
-}
-
 func main() {
   if len(os.Args) < 2 {
     fmt.Printf("Usage: %s [-p] id [tag]\n", os.Args[0])
@@ -40,34 +27,27 @@ func main() {
   client, err := docker.NewClientFromEnv()
   checkError(err)
 
-  pullImage := os.Args[1] == "-p"
-  containerId := os.Args[len(os.Args) - 1]
-  desiredTag := ""
+  args, err := parseArgs(os.Args)
 
-  if len(os.Args) == 4 {
-    containerId = os.Args[2]
-    desiredTag = os.Args[3]
-  }
-
-  oldContainer, err := client.InspectContainer(containerId)
+  recentContainer, err := client.InspectContainer(args.containerId)
   checkError(err)
 
   // TODO delete _new if an error occures
 
-  repository, currentTag := parseImageName(oldContainer.Config.Image)
+  repository, currentTag := parseImageName(recentContainer.Config.Image)
 
-  if desiredTag == "" {
-    desiredTag = currentTag
+  if args.tagName == "" {
+    args.tagName = currentTag
   }
 
-  fmt.Printf("Image: %s:%s\n", repository, desiredTag)
+  fmt.Printf("Image: %s:%s\n", repository, args.tagName)
 
-  if pullImage {
+  if args.pullImage {
     fmt.Print("Pulling image...\n")
 
     err = client.PullImage(docker.PullImageOptions{
       Repository: repository,
-      Tag: desiredTag }, docker.AuthConfiguration{})
+      Tag: args.tagName }, docker.AuthConfiguration{})
 
     checkError(err)
   }
@@ -77,18 +57,19 @@ func main() {
   now := int(time.Now().Unix())
   then := now - 1
 
-  name := oldContainer.Name
+  name := recentContainer.Name
   temporaryName := name + "_" + strconv.Itoa(now)
+  recentName := name + "_" + strconv.Itoa(then)
 
   // TODO possibility to add/change environment variables
   var options docker.CreateContainerOptions
   options.Name = temporaryName
-  options.Config = oldContainer.Config
-  options.Config.Image = repository + ":" + desiredTag
-  options.HostConfig = oldContainer.HostConfig
-  options.HostConfig.VolumesFrom = []string{oldContainer.ID}
+  options.Config = recentContainer.Config
+  options.Config.Image = repository + ":" + args.tagName
+  options.HostConfig = recentContainer.HostConfig
+  options.HostConfig.VolumesFrom = []string{recentContainer.ID}
 
-  links := oldContainer.HostConfig.Links
+  links := recentContainer.HostConfig.Links
 
   for i := range links {
     parts := strings.SplitN(links[i], ":", 2)
@@ -110,8 +91,8 @@ func main() {
   checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
-    ID: oldContainer.ID,
-    Name: name + "_" + strconv.Itoa(then) })
+    ID: recentContainer.ID,
+    Name: recentName })
   checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
@@ -119,9 +100,9 @@ func main() {
     Name: name})
   checkError(err)
 
-  if oldContainer.State.Running {
+  if recentContainer.State.Running {
     fmt.Printf("Stopping old container\n")
-    err = client.StopContainer(oldContainer.ID, 10)
+    err = client.StopContainer(recentContainer.ID, 10)
     checkError(err)
 
     fmt.Printf("Starting new container\n")
@@ -130,11 +111,19 @@ func main() {
   }
 
   // TODO fallback to old container if error occured
-  // TODO add option to remove old container on sucsess
+
+  if args.deleteContainer {
+    fmt.Printf("Deleting old container...\n")
+
+    err = client.RemoveContainer(docker.RemoveContainerOptions{
+      ID: recentContainer.ID,
+      RemoveVolumes: false })
+    checkError(err)
+  }
 
   fmt.Printf(
     "Migrated from %s to %s\n",
-    oldContainer.ID[:4],
+    recentContainer.ID[:4],
     newContainer.ID[:4])
 
   fmt.Println("Done")
