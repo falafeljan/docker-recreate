@@ -8,7 +8,7 @@ Luckily, [@lanrat](https://github.com/lanrat) wrote a small Gist doing exactly t
 ## Usage
 
 ```
-docker-recreate [-p] id
+docker-recreate [-p] id [tag]
 ```
 
-`id` specifies the container ID of the container to-be-recreated. Specify `-p` to make sure the newest image is pulled from the repository.
+`id` specifies the container ID of the container to-be-recreated. Specify `-p` to make sure the newest image is pulled from the repository. If `tag` is provided, a different tag than the currently selected may be specified.
