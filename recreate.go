@@ -29,12 +29,12 @@ func main() {
 
   args, err := parseArgs(os.Args)
 
-  oldContainer, err := client.InspectContainer(args.containerId)
+  recentContainer, err := client.InspectContainer(args.containerId)
   checkError(err)
 
   // TODO delete _new if an error occures
 
-  repository, currentTag := parseImageName(oldContainer.Config.Image)
+  repository, currentTag := parseImageName(recentContainer.Config.Image)
 
   if args.tagName == "" {
     args.tagName = currentTag
@@ -57,18 +57,19 @@ func main() {
   now := int(time.Now().Unix())
   then := now - 1
 
-  name := oldContainer.Name
+  name := recentContainer.Name
   temporaryName := name + "_" + strconv.Itoa(now)
+  recentName := name + "_" + strconv.Itoa(then)
 
   // TODO possibility to add/change environment variables
   var options docker.CreateContainerOptions
   options.Name = temporaryName
-  options.Config = oldContainer.Config
+  options.Config = recentContainer.Config
   options.Config.Image = repository + ":" + args.tagName
-  options.HostConfig = oldContainer.HostConfig
-  options.HostConfig.VolumesFrom = []string{oldContainer.ID}
+  options.HostConfig = recentContainer.HostConfig
+  options.HostConfig.VolumesFrom = []string{recentContainer.ID}
 
-  links := oldContainer.HostConfig.Links
+  links := recentContainer.HostConfig.Links
 
   for i := range links {
     parts := strings.SplitN(links[i], ":", 2)
@@ -90,8 +91,8 @@ func main() {
   checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
-    ID: oldContainer.ID,
-    Name: name + "_" + strconv.Itoa(then) })
+    ID: recentContainer.ID,
+    Name: recentName })
   checkError(err)
 
   err = client.RenameContainer(docker.RenameContainerOptions{
@@ -99,9 +100,9 @@ func main() {
     Name: name})
   checkError(err)
 
-  if oldContainer.State.Running {
+  if recentContainer.State.Running {
     fmt.Printf("Stopping old container\n")
-    err = client.StopContainer(oldContainer.ID, 10)
+    err = client.StopContainer(recentContainer.ID, 10)
     checkError(err)
 
     fmt.Printf("Starting new container\n")
@@ -110,11 +111,19 @@ func main() {
   }
 
   // TODO fallback to old container if error occured
-  // TODO add option to remove old container on sucsess
+
+  if args.deleteContainer {
+    fmt.Printf("Deleting old container...\n")
+
+    err = client.RemoveContainer(docker.RemoveContainerOptions{
+      ID: recentContainer.ID,
+      RemoveVolumes: false })
+    checkError(err)
+  }
 
   fmt.Printf(
     "Migrated from %s to %s\n",
-    oldContainer.ID[:4],
+    recentContainer.ID[:4],
     newContainer.ID[:4])
 
   fmt.Println("Done")
