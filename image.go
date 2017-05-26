@@ -12,7 +12,7 @@ func parseImageName(imageName string) (repository string, tag string) {
     tag := imageName[(sepIndex+1):]
 
     return repository, tag
-  } else {
-    return imageName, "latest"
   }
+
+  return imageName, "latest"
 }

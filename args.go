@@ -4,8 +4,9 @@ import (
   "errors"
 )
 
+// Args foobar
 type Args struct {
-  containerId string
+  containerID string
   tagName string
   pullImage bool
   deleteContainer bool
@@ -54,7 +55,7 @@ func parseArgs(args []string) (Args, error) {
 
     switch j {
     case 0:
-      parsedArgs.containerId = arg
+      parsedArgs.containerID = arg
 
     case 1:
       parsedArgs.tagName = arg

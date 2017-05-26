@@ -1,7 +1,6 @@
 package main
 
 import (
-  "errors"
   "fmt"
   "strconv"
   "strings"
@@ -35,7 +34,7 @@ func cloneContainerLinks(container *docker.Container) (
 
     if len(parts) != 2 {
       // TODO make function and add better error return
-      return nil, errors.New(fmt.Sprintf("Unable to parse link %s", links[i]))
+      return nil, fmt.Errorf("Unable to parse link %s", links[i])
     }
 
     containerName := strings.TrimPrefix(parts[0], "/")
