@@ -12,7 +12,7 @@ type Args struct {
 }
 
 func parseFlags(args []string, defaultArgs *Args) (Args, int) {
-  var i int
+  i := -1
 
   parsedFlags := *defaultArgs
 
