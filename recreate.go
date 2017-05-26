@@ -25,7 +25,7 @@ func main() {
 
   args, err := parseArgs(os.Args)
 
-  recentContainer, err := client.InspectContainer(args.containerId)
+  recentContainer, err := client.InspectContainer(args.containerID)
   checkError(err)
 
   repository, currentTag := parseImageName(recentContainer.Config.Image)
