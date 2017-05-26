@@ -5,7 +5,6 @@ import (
   "os"
 
   "github.com/fsouza/go-dockerclient"
-  //"github.com/tonnerre/golang-pretty"
 )
 
 func checkError(err error) {
@@ -29,8 +28,6 @@ func main() {
   recentContainer, err := client.InspectContainer(args.containerId)
   checkError(err)
 
-  // TODO delete _new if an error occures
-
   repository, currentTag := parseImageName(recentContainer.Config.Image)
 
   if args.tagName == "" {
@@ -49,11 +46,8 @@ func main() {
     checkError(err)
   }
 
-  // TODO handle image tags/labels?
-
   temporaryName, recentName := generateContainerNames(recentContainer)
 
-  // TODO possibility to add/change environment variables
   options, err := cloneContainerOptions(
     recentContainer,
     repository,
@@ -84,8 +78,6 @@ func main() {
     err = client.StartContainer(newContainer.ID, newContainer.HostConfig)
     checkError(err)
   }
-
-  // TODO fallback to old container if error occured
 
   if args.deleteContainer {
     fmt.Printf("Deleting old container...\n")
