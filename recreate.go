@@ -16,7 +16,10 @@ func checkError(err error) {
 
 func main() {
   if len(os.Args) < 2 {
-    fmt.Printf("Usage: %s [-p] id [tag]\n", os.Args[0])
+    fmt.Printf(`Usage: %s [-p] [-d] id [tag]
+  -p Pull image from registry
+  -d Delete old container
+`, os.Args[0])
     os.Exit(0)
   }
 
