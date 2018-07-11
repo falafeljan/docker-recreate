@@ -1,18 +1,29 @@
 SOURCEDIR=.
 SOURCES := $(find $(SOURCEDIR) -name '*.go')
 
-BINARY=docker-recreate
+BINARY=build/docker-recreate
 LDFLAGS=-ldflags "-X main.BuildTime=`date +%FT%T%z`"
 
 .DEFAULT_GOAL: $(BINARY)
 
-$(BINARY): $(SOURCES)
-		go build ${LDFLAGS} -o ${BINARY} ${SOURCES}
+all: clean prebuild test build
+
+.PHONY: prebuild
+prebuild: $(SOURCES)
+	go get -d -v ./...
+
+.PHONY: build
+build: $(SOURCES)
+	go build ${LDFLAGS} -o ${BINARY} ${SOURCES}
 
 .PHONY: install
 install:
-		go install ${LDFLAGS} ./...
+	go install ${LDFLAGS} ./...
 
 .PHONY: clean
 clean:
-		if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
+	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
+
+.PHONY: test
+test:
+	go test
