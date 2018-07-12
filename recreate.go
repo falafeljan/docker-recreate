@@ -1,100 +1,135 @@
 package main
 
 import (
-  "fmt"
-  "os"
-
-  "github.com/fsouza/go-dockerclient"
+	"github.com/fsouza/go-dockerclient"
 )
 
-func checkError(err error) {
-  if err != nil {
-    fmt.Println(err)
-    os.Exit(0)
-  }
+// Recreation describes a recreation step
+type Recreation struct {
+	previousContainerID string
+	newContainerID      string
 }
 
-func main() {
-  if len(os.Args) < 2 {
-    fmt.Printf(`Usage: %s [-p] [-d] id [tag]
-  -p Pull image from registry
-  -d Delete old container
-`, os.Args[0])
-    os.Exit(0)
-  }
+// Options describe additional options
+type Options struct {
+	pullImage       bool
+	deleteContainer bool
+	registries      []RegistryConf
+}
 
-  client, err := docker.NewClientFromEnv()
-  checkError(err)
+// Recreate a container with a given Docker client
+func Recreate(
+	endpoint string,
+	containerID string,
+	tagName string,
+	options *Options) (
+	recreation *Recreation,
+	err error) {
+	client, err := docker.NewClientFromEnv()
+	if err != nil {
+		return nil, err
+	}
 
-  args, err := parseArgs(os.Args)
+	recreation, err = RecreateWithClient(client, containerID, tagName, options)
+	if err != nil {
+		return nil, err
+	}
 
-  recentContainer, err := client.InspectContainer(args.containerID)
-  checkError(err)
+	return recreation, nil
+}
 
-  repository, currentTag := parseImageName(recentContainer.Config.Image)
+// RecreateWithClient recreates a container with a given Docker client
+func RecreateWithClient(
+	client *docker.Client,
+	containerID string,
+	tagName string,
+	options *Options) (recreation *Recreation, err error) {
+	previousContainer, err := client.InspectContainer(containerID)
+	if err != nil {
+		return nil, err
+	}
 
-  if args.tagName == "" {
-    args.tagName = currentTag
-  }
+	imageSpec := parseImageName(previousContainer.Config.Image)
 
-  fmt.Printf("Image: %s:%s\n", repository, args.tagName)
+	if tagName != "" {
+		imageSpec.tag = tagName
+	}
 
-  if args.pullImage {
-    fmt.Print("Pulling image...\n")
+	if options.pullImage {
+		auth := findRegistry(options.registries, imageSpec.registry)
+		pullOpts := docker.PullImageOptions{
+			Repository: imageSpec.repository,
+			Tag:        imageSpec.tag}
 
-    err = client.PullImage(docker.PullImageOptions{
-      Repository: repository,
-      Tag: args.tagName }, docker.AuthConfiguration{})
+		err = client.PullImage(
+			pullOpts,
+			auth)
 
-    checkError(err)
-  }
+		if err != nil {
+			return nil, err
+		}
+	}
 
-  temporaryName, recentName := generateContainerNames(recentContainer)
+	temporaryName, recentName := generateContainerNames(previousContainer)
 
-  options, err := cloneContainerOptions(
-    recentContainer,
-    repository,
-    args.tagName,
-    temporaryName)
-  checkError(err)
+	cloneOptions, err := cloneContainerOptions(
+		previousContainer,
+		imageSpec.repository,
+		imageSpec.tag,
+		temporaryName)
 
-  fmt.Println("Creating...")
-  newContainer, err := client.CreateContainer(options)
-  checkError(err)
+	if err != nil {
+		return nil, err
+	}
 
-  err = client.RenameContainer(docker.RenameContainerOptions{
-    ID: recentContainer.ID,
-    Name: recentName })
-  checkError(err)
+	newContainer, err := client.CreateContainer(cloneOptions)
 
-  err = client.RenameContainer(docker.RenameContainerOptions{
-    ID: newContainer.ID,
-    Name: recentContainer.Name})
-  checkError(err)
+	if err != nil {
+		return nil, err
+	}
 
-  if recentContainer.State.Running {
-    fmt.Printf("Stopping old container\n")
-    err = client.StopContainer(recentContainer.ID, 10)
-    checkError(err)
+	err = client.RenameContainer(docker.RenameContainerOptions{
+		ID:   previousContainer.ID,
+		Name: recentName})
 
-    fmt.Printf("Starting new container\n")
-    err = client.StartContainer(newContainer.ID, newContainer.HostConfig)
-    checkError(err)
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  if args.deleteContainer {
-    fmt.Printf("Deleting old container...\n")
+	err = client.RenameContainer(docker.RenameContainerOptions{
+		ID:   newContainer.ID,
+		Name: previousContainer.Name})
 
-    err = client.RemoveContainer(docker.RemoveContainerOptions{
-      ID: recentContainer.ID,
-      RemoveVolumes: false })
-    checkError(err)
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  fmt.Printf(
-    "Migrated from %s to %s\n",
-    recentContainer.ID[:4],
-    newContainer.ID[:4])
+	if previousContainer.State.Running {
+		err = client.StopContainer(previousContainer.ID, 10)
 
-  fmt.Println("Done")
+		if err != nil {
+			return nil, err
+		}
+
+		err = client.StartContainer(newContainer.ID, newContainer.HostConfig)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if options.deleteContainer {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{
+			ID:            previousContainer.ID,
+			RemoveVolumes: false})
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Recreation{
+			previousContainerID: previousContainer.ID,
+			newContainerID:      newContainer.ID},
+		nil
 }

@@ -1,18 +1,43 @@
 package main
 
 import (
-  "strings"
+	"strings"
 )
 
-func parseImageName(imageName string) (repository string, tag string) {
-  sepIndex := strings.LastIndex(imageName, ":")
+// ImageSpec describes all parts of an image identifier
+type ImageSpec struct {
+	registry   string
+	name       string
+	tag        string
+	repository string
+}
 
-  if sepIndex > -1 {
-    repository := imageName[:sepIndex]
-    tag := imageName[(sepIndex+1):]
+func parseImageName(imageName string) (imageSpec *ImageSpec) {
+	registry := ""
+	name := imageName
+	tag := "latest"
 
-    return repository, tag
-  }
+	slashIndex := strings.Index(name, "/")
 
-  return imageName, "latest"
+	if slashIndex > -1 {
+		registry = imageName[:slashIndex]
+		name = imageName[(slashIndex + 1):]
+	}
+
+	colonIndex := strings.LastIndex(name, ":")
+
+	if colonIndex > -1 {
+		fullName := name
+		name = fullName[:colonIndex]
+		tag = fullName[(colonIndex + 1):]
+	}
+
+	return &ImageSpec{
+		registry: registry,
+		name:     name,
+		tag:      tag,
+		repository: strings.Join([]string{
+			registry,
+			name},
+			"/")}
 }
