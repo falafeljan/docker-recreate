@@ -9,7 +9,7 @@ Luckily, [@lanrat](https://github.com/lanrat) wrote a small Gist doing exactly t
 
 ## Usage
 
-To install, get it via `go get`. (You'll need [Go](https://golang.org/), obviously.)
+To install, get it via `go get`. (You'll need [Go](https://golang.org/), obviously). Install via `make`. Then, run it:
 
 ```
 docker-recreate [-p] [-d] id [tag]
@@ -19,3 +19,20 @@ docker-recreate [-p] [-d] id [tag]
 - `-d` Delete the then-old container when the new one is running.
 - `id` Container ID of the container to-be-recreated.
 - `tag` A different tag than the currently selected may be specified. (`staging`, for example.)
+
+
+#### Private Repositories
+
+You may provide credentials for private repositories by specifying them in `~/.recreate.json`:
+
+```json
+{
+  "registries": [
+    {
+      "host": "registry.acme.corp",
+      "user": "dane",
+      "password": "joe",
+    }
+  ]
+}
+```
