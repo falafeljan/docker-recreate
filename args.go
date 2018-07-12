@@ -1,66 +1,66 @@
 package main
 
 import (
-  "errors"
+	"errors"
 )
 
 // Args foobar
 type Args struct {
-  containerID string
-  tagName string
-  pullImage bool
-  deleteContainer bool
+	containerID     string
+	tagName         string
+	pullImage       bool
+	deleteContainer bool
 }
 
 func parseFlags(args []string, defaultArgs *Args) (Args, int) {
-  i := -1
+	i := -1
 
-  parsedFlags := *defaultArgs
+	parsedFlags := *defaultArgs
 
-  for j, arg := range args {
-    if arg[0] == '-' {
-      switch arg[1] {
-      case 'p':
-        parsedFlags.pullImage = true
+	for j, arg := range args {
+		if arg[0] == '-' {
+			switch arg[1] {
+			case 'p':
+				parsedFlags.pullImage = true
 
-      case 'd':
-        parsedFlags.deleteContainer = true
-      }
+			case 'd':
+				parsedFlags.deleteContainer = true
+			}
 
-      i = j
-    } else {
-      break
-    }
-  }
+			i = j
+		} else {
+			break
+		}
+	}
 
-  return parsedFlags, i+1
+	return parsedFlags, i + 1
 }
 
 func parseArgs(args []string) (Args, error) {
-  args = args[1:]
+	args = args[1:]
 
-  defaultArgs := Args{
-    pullImage: false,
-    deleteContainer: false }
+	defaultArgs := Args{
+		pullImage:       false,
+		deleteContainer: false}
 
-  parsedArgs, i := parseFlags(args, &defaultArgs)
-  remainingArgs := len(args) - i
+	parsedArgs, i := parseFlags(args, &defaultArgs)
+	remainingArgs := len(args) - i
 
-  for j := 0; j < remainingArgs; j++ {
-    arg := args[i+j]
+	for j := 0; j < remainingArgs; j++ {
+		arg := args[i+j]
 
-    if arg[0] == '-' {
-      return defaultArgs, errors.New("Bad format")
-    }
+		if arg[0] == '-' {
+			return defaultArgs, errors.New("Bad format")
+		}
 
-    switch j {
-    case 0:
-      parsedArgs.containerID = arg
+		switch j {
+		case 0:
+			parsedArgs.containerID = arg
 
-    case 1:
-      parsedArgs.tagName = arg
-    }
-  }
+		case 1:
+			parsedArgs.tagName = arg
+		}
+	}
 
-  return parsedArgs, nil
+	return parsedArgs, nil
 }
