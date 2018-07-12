@@ -53,7 +53,7 @@
     "pkg/stdcopy",
     "pkg/system"
   ]
-  revision = "3dfb26ab3cbf961298f8ce3f94659b5fe4146ceb"
+  revision = "a422774e593b33bd287d9890544ad9e09b380d8c"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -66,12 +66,6 @@
   packages = ["."]
   revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
   version = "v0.3.3"
-
-[[projects]]
-  name = "github.com/docker/libnetwork"
-  packages = ["ipamutils"]
-  revision = "6d23f11e681f24ee31802939e243fe8be41a75eb"
-  version = "v0.8.0-dev.2"
 
 [[projects]]
   name = "github.com/fsouza/go-dockerclient"
@@ -137,6 +131,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  revision = "cffdcf672aee934982473246bc7e9a8ba446aa9b"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -147,6 +147,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a22face01933d5bea1b8f61936a154bc89bbe504382e2881870e849e8ea61ea5"
+  inputs-digest = "92f0a253643c2e455c1bdd3021c6de17eaee751f9d6caeaab5cbfe2eb1b67d4d"
   solver-name = "gps-cdcl"
   solver-version = 1
