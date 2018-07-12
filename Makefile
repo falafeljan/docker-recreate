@@ -10,7 +10,7 @@ all: clean prebuild test build
 
 .PHONY: prebuild
 prebuild: $(SOURCES)
-	go get -d -v ./...
+	dep ensure
 
 .PHONY: build
 build: $(SOURCES)
