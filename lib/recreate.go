@@ -1,4 +1,4 @@
-package main
+package recreate
 
 import (
 	"github.com/fsouza/go-dockerclient"
@@ -6,15 +6,15 @@ import (
 
 // Recreation describes a recreation step
 type Recreation struct {
-	previousContainerID string
-	newContainerID      string
+	PreviousContainerID string
+	NewContainerID      string
 }
 
 // Options describe additional options
 type Options struct {
-	pullImage       bool
-	deleteContainer bool
-	registries      []RegistryConf
+	PullImage       bool
+	DeleteContainer bool
+	Registries      []RegistryConf
 }
 
 // Recreate a container with a given Docker client
@@ -55,8 +55,8 @@ func RecreateWithClient(
 		imageSpec.tag = tagName
 	}
 
-	if options.pullImage {
-		auth := findRegistry(options.registries, imageSpec.registry)
+	if options.PullImage {
+		auth := findRegistry(options.Registries, imageSpec.registry)
 		pullOpts := docker.PullImageOptions{
 			Repository: imageSpec.repository,
 			Tag:        imageSpec.tag}
@@ -118,7 +118,7 @@ func RecreateWithClient(
 		}
 	}
 
-	if options.deleteContainer {
+	if options.DeleteContainer {
 		err = client.RemoveContainer(docker.RemoveContainerOptions{
 			ID:            previousContainer.ID,
 			RemoveVolumes: false})
@@ -129,7 +129,7 @@ func RecreateWithClient(
 	}
 
 	return &Recreation{
-			previousContainerID: previousContainer.ID,
-			newContainerID:      newContainer.ID},
+			PreviousContainerID: previousContainer.ID,
+			NewContainerID:      newContainer.ID},
 		nil
 }

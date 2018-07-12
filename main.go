@@ -7,9 +7,15 @@ import (
 	"os"
 	"strings"
 
+	recreate "github.com/fallafeljan/docker-recreate/lib"
 	docker "github.com/fsouza/go-dockerclient"
 	homedir "github.com/mitchellh/go-homedir"
 )
+
+// Conf contains all configuration options.
+type Conf struct {
+	Registries []recreate.RegistryConf `json:"registries"`
+}
 
 func checkError(err error) {
 	if err != nil {
@@ -19,7 +25,7 @@ func checkError(err error) {
 }
 
 func parseConf() (conf *Conf, err error) {
-	emptyConf := Conf{Registries: []RegistryConf{}}
+	emptyConf := Conf{Registries: []recreate.RegistryConf{}}
 	homeDirectory, err := homedir.Dir()
 	if err != nil {
 		return &emptyConf, err
@@ -44,11 +50,11 @@ func parseConf() (conf *Conf, err error) {
 	return &parsedConf, nil
 }
 
-func createOptions(args *Args, conf *Conf) (options *Options) {
-	return &Options{
-		pullImage:       args.pullImage,
-		deleteContainer: args.deleteContainer,
-		registries:      conf.Registries}
+func createOptions(args *Args, conf *Conf) (options *recreate.Options) {
+	return &recreate.Options{
+		PullImage:       args.pullImage,
+		DeleteContainer: args.deleteContainer,
+		Registries:      conf.Registries}
 }
 
 func main() {
@@ -69,7 +75,7 @@ func main() {
 	conf, _ := parseConf()
 	checkError(err)
 
-	recreation, err := RecreateWithClient(
+	recreation, err := recreate.RecreateWithClient(
 		client,
 		args.containerID,
 		args.tagName,
@@ -79,6 +85,6 @@ func main() {
 	fmt.Printf(
 		"Migrated `%s` from %s to %s.\n",
 		args.containerID,
-		recreation.previousContainerID[:4],
-		recreation.newContainerID[:4])
+		recreation.PreviousContainerID[:4],
+		recreation.NewContainerID[:4])
 }
