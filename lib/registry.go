@@ -1,4 +1,4 @@
-package main
+package recreate
 
 import (
 	docker "github.com/fsouza/go-dockerclient"
@@ -9,11 +9,6 @@ type RegistryConf struct {
 	Host     string `json:"host"`
 	User     string `json:"user"`
 	Password string `json:"password"`
-}
-
-// Conf contains all configuration options.
-type Conf struct {
-	Registries []RegistryConf `json:"registries"`
 }
 
 func findRegistry(
