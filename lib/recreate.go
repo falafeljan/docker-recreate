@@ -6,8 +6,8 @@ import (
 
 // Recreation describes a recreation step
 type Recreation struct {
-	PreviousContainerID string
-	NewContainerID      string
+	PreviousContainerID string `json:"previousContainerID"`
+	NewContainerID      string `json:"newContainerID"`
 }
 
 // Options describe additional options
