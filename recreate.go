@@ -10,60 +10,20 @@ type Recreation struct {
 	NewContainerID      string `json:"newContainerID"`
 }
 
-// DockerOptions describe additional options
-type DockerOptions struct {
-	PullImage       bool
-	DeleteContainer bool
-	Registries      []RegistryConf
+// ContainerOptions describe additional options applied to the container
+type ContainerOptions struct {
+	Env map[string]string
 }
 
-// Recreate a container within the default Docker environment
-func Recreate(
+// Recreate recreates a container within a given context
+func (c Context) Recreate(
 	containerID string,
 	imageTag string,
-	options *DockerOptions) (
-	recreation *Recreation,
-	err error) {
-	client, err := docker.NewClientFromEnv()
-	if err != nil {
-		return nil, err
-	}
+	containerOptions *ContainerOptions,
+) (recreation *Recreation, err error) {
+	client := c.client
+	dockerOptions := c.options
 
-	recreation, err = RecreateWithClient(containerID, imageTag, options, client)
-	if err != nil {
-		return nil, err
-	}
-
-	return recreation, nil
-}
-
-// RecreateWithEndpoint a container on a specified endpoint
-func RecreateWithEndpoint(
-	containerID string,
-	imageTag string,
-	options *DockerOptions,
-	endpoint string) (
-	recreation *Recreation,
-	err error) {
-	client, err := docker.NewClient(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	recreation, err = RecreateWithClient(containerID, imageTag, options, client)
-	if err != nil {
-		return nil, err
-	}
-
-	return recreation, nil
-}
-
-// RecreateWithClient recreates a container with a given Docker client
-func RecreateWithClient(
-	containerID string,
-	imageTag string,
-	options *DockerOptions,
-	client *docker.Client) (recreation *Recreation, err error) {
 	previousContainer, err := client.InspectContainer(containerID)
 	if err != nil {
 		return nil, err
@@ -75,8 +35,8 @@ func RecreateWithClient(
 		imageSpec.tag = imageTag
 	}
 
-	if options.PullImage {
-		auth := findRegistry(options.Registries, imageSpec.registry)
+	if dockerOptions.PullImage {
+		auth := findRegistry(dockerOptions.Registries, imageSpec.registry)
 		pullOpts := docker.PullImageOptions{
 			Repository: imageSpec.repository,
 			Tag:        imageSpec.tag}
@@ -102,6 +62,7 @@ func RecreateWithClient(
 		return nil, err
 	}
 
+	cloneOptions.Config.Env = mergeContainerEnv(cloneOptions, containerOptions.Env)
 	newContainer, err := client.CreateContainer(cloneOptions)
 
 	if err != nil {
@@ -138,7 +99,7 @@ func RecreateWithClient(
 		}
 	}
 
-	if options.DeleteContainer {
+	if dockerOptions.DeleteContainer {
 		err = client.RemoveContainer(docker.RemoveContainerOptions{
 			ID:            previousContainer.ID,
 			RemoveVolumes: false})
