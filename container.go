@@ -67,3 +67,14 @@ func cloneContainerOptions(
 
 	return options, err
 }
+
+func mergeContainerEnv(options docker.CreateContainerOptions, env map[string]string) []string {
+	var variables []string
+	copy(variables, options.Config.Env)
+
+	for k, v := range env {
+		variables = append(variables, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	return variables
+}

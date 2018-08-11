@@ -62,6 +62,7 @@ func (c Context) Recreate(
 		return nil, err
 	}
 
+	cloneOptions.Config.Env = mergeContainerEnv(cloneOptions, containerOptions.Env)
 	newContainer, err := client.CreateContainer(cloneOptions)
 
 	if err != nil {
