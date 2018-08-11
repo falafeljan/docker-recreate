@@ -7,7 +7,7 @@ import (
 // Args foobar
 type Args struct {
 	containerID     string
-	tagName         string
+	imageTag        string
 	pullImage       bool
 	deleteContainer bool
 }
@@ -58,7 +58,7 @@ func parseArgs(args []string) (Args, error) {
 			parsedArgs.containerID = arg
 
 		case 1:
-			parsedArgs.tagName = arg
+			parsedArgs.imageTag = arg
 		}
 	}
 

@@ -21,7 +21,7 @@ type Options struct {
 func Recreate(
 	endpoint string,
 	containerID string,
-	tagName string,
+	imageTag string,
 	options *Options) (
 	recreation *Recreation,
 	err error) {
@@ -30,7 +30,7 @@ func Recreate(
 		return nil, err
 	}
 
-	recreation, err = RecreateWithClient(client, containerID, tagName, options)
+	recreation, err = RecreateWithClient(client, containerID, imageTag, options)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func Recreate(
 func RecreateWithClient(
 	client *docker.Client,
 	containerID string,
-	tagName string,
+	imageTag string,
 	options *Options) (recreation *Recreation, err error) {
 	previousContainer, err := client.InspectContainer(containerID)
 	if err != nil {
@@ -51,8 +51,8 @@ func RecreateWithClient(
 
 	imageSpec := parseImageName(previousContainer.Config.Image)
 
-	if tagName != "" {
-		imageSpec.tag = tagName
+	if imageTag != "" {
+		imageSpec.tag = imageTag
 	}
 
 	if options.PullImage {

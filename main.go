@@ -78,7 +78,7 @@ func main() {
 	recreation, err := recreate.RecreateWithClient(
 		client,
 		args.containerID,
-		args.tagName,
+		args.imageTag,
 		createOptions(&args, conf))
 	checkError(err)
 
