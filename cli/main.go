@@ -7,8 +7,7 @@ import (
 	"os"
 	"strings"
 
-	recreate "github.com/fallafeljan/docker-recreate/lib"
-	docker "github.com/fsouza/go-dockerclient"
+	recreate "github.com/fallafeljan/docker-recreate"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -50,8 +49,8 @@ func parseConf() (conf *Conf, err error) {
 	return &parsedConf, nil
 }
 
-func createOptions(args *Args, conf *Conf) (options *recreate.Options) {
-	return &recreate.Options{
+func createOptions(args *Args, conf *Conf) (options *recreate.DockerOptions) {
+	return &recreate.DockerOptions{
 		PullImage:       args.pullImage,
 		DeleteContainer: args.deleteContainer,
 		Registries:      conf.Registries}
@@ -66,19 +65,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	client, err := docker.NewClientFromEnv()
-	checkError(err)
-
 	args, err := parseArgs(os.Args)
 	checkError(err)
 
 	conf, _ := parseConf()
 	checkError(err)
 
-	recreation, err := recreate.RecreateWithClient(
-		client,
+	recreation, err := recreate.Recreate(
 		args.containerID,
-		args.tagName,
+		args.imageTag,
 		createOptions(&args, conf))
 	checkError(err)
 

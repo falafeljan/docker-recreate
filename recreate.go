@@ -10,19 +10,18 @@ type Recreation struct {
 	NewContainerID      string `json:"newContainerID"`
 }
 
-// Options describe additional options
-type Options struct {
+// DockerOptions describe additional options
+type DockerOptions struct {
 	PullImage       bool
 	DeleteContainer bool
 	Registries      []RegistryConf
 }
 
-// Recreate a container with a given Docker client
+// Recreate a container within the default Docker environment
 func Recreate(
-	endpoint string,
 	containerID string,
-	tagName string,
-	options *Options) (
+	imageTag string,
+	options *DockerOptions) (
 	recreation *Recreation,
 	err error) {
 	client, err := docker.NewClientFromEnv()
@@ -30,7 +29,28 @@ func Recreate(
 		return nil, err
 	}
 
-	recreation, err = RecreateWithClient(client, containerID, tagName, options)
+	recreation, err = RecreateWithClient(containerID, imageTag, options, client)
+	if err != nil {
+		return nil, err
+	}
+
+	return recreation, nil
+}
+
+// RecreateWithEndpoint a container on a specified endpoint
+func RecreateWithEndpoint(
+	containerID string,
+	imageTag string,
+	options *DockerOptions,
+	endpoint string) (
+	recreation *Recreation,
+	err error) {
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	recreation, err = RecreateWithClient(containerID, imageTag, options, client)
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +60,10 @@ func Recreate(
 
 // RecreateWithClient recreates a container with a given Docker client
 func RecreateWithClient(
-	client *docker.Client,
 	containerID string,
-	tagName string,
-	options *Options) (recreation *Recreation, err error) {
+	imageTag string,
+	options *DockerOptions,
+	client *docker.Client) (recreation *Recreation, err error) {
 	previousContainer, err := client.InspectContainer(containerID)
 	if err != nil {
 		return nil, err
@@ -51,8 +71,8 @@ func RecreateWithClient(
 
 	imageSpec := parseImageName(previousContainer.Config.Image)
 
-	if tagName != "" {
-		imageSpec.tag = tagName
+	if imageTag != "" {
+		imageSpec.tag = imageTag
 	}
 
 	if options.PullImage {
