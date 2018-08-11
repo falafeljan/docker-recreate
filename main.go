@@ -50,8 +50,8 @@ func parseConf() (conf *Conf, err error) {
 	return &parsedConf, nil
 }
 
-func createOptions(args *Args, conf *Conf) (options *recreate.Options) {
-	return &recreate.Options{
+func createOptions(args *Args, conf *Conf) (options *recreate.DockerOptions) {
+	return &recreate.DockerOptions{
 		PullImage:       args.pullImage,
 		DeleteContainer: args.deleteContainer,
 		Registries:      conf.Registries}

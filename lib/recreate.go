@@ -11,7 +11,7 @@ type Recreation struct {
 }
 
 // Options describe additional options
-type Options struct {
+type DockerOptions struct {
 	PullImage       bool
 	DeleteContainer bool
 	Registries      []RegistryConf
@@ -22,7 +22,7 @@ func Recreate(
 	endpoint string,
 	containerID string,
 	imageTag string,
-	options *Options) (
+	options *DockerOptions) (
 	recreation *Recreation,
 	err error) {
 	client, err := docker.NewClientFromEnv()
@@ -43,7 +43,7 @@ func RecreateWithClient(
 	client *docker.Client,
 	containerID string,
 	imageTag string,
-	options *Options) (recreation *Recreation, err error) {
+	options *DockerOptions) (recreation *Recreation, err error) {
 	previousContainer, err := client.InspectContainer(containerID)
 	if err != nil {
 		return nil, err
