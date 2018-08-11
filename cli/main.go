@@ -49,7 +49,7 @@ func parseConf() (conf *Conf, err error) {
 	return &parsedConf, nil
 }
 
-func createOptions(args *Args, conf *Conf) (options *recreate.DockerOptions) {
+func createDocker(args *Args, conf *Conf) (options *recreate.DockerOptions) {
 	return &recreate.DockerOptions{
 		PullImage:       args.pullImage,
 		DeleteContainer: args.deleteContainer,
@@ -74,7 +74,8 @@ func main() {
 	recreation, err := recreate.Recreate(
 		args.containerID,
 		args.imageTag,
-		createOptions(&args, conf))
+		&recreate.ContainerOptions{},
+		createDocker(&args, conf))
 	checkError(err)
 
 	fmt.Printf(
