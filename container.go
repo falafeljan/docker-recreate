@@ -69,7 +69,7 @@ func cloneContainerOptions(
 }
 
 func mergeContainerEnv(options docker.CreateContainerOptions, env map[string]string) []string {
-	var variables []string
+	variables := make([]string, len(options.Config.Env))
 	copy(variables, options.Config.Env)
 
 	for k, v := range env {

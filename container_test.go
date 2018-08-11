@@ -26,8 +26,8 @@ func testEquality(a []string, b []string) bool {
 
 func TestMergeContainerEnv(t *testing.T) {
 	env := make(map[string]string)
-	env["FOO"] = "BAR"
 	env["BAR"] = "baz123"
+	env["FOO"] = "BAR"
 
 	config := docker.CreateContainerOptions{
 		Config: &docker.Config{
@@ -37,8 +37,8 @@ func TestMergeContainerEnv(t *testing.T) {
 
 	expected := []string{
 		"BAZ=bar",
-		"FOO=BAR",
 		"BAR=baz123",
+		"FOO=BAR",
 	}
 
 	received := mergeContainerEnv(config, env)
