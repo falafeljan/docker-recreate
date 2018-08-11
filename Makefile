@@ -1,4 +1,4 @@
-SOURCEDIR=.
+SOURCEDIR=.n
 SOURCES := $(find $(SOURCEDIR) -name '*.go')
 
 BINARY=build/docker-recreate
@@ -14,11 +14,11 @@ prebuild: $(SOURCES)
 
 .PHONY: build
 build: $(SOURCES)
-	go build ${LDFLAGS} -o ${BINARY} ${SOURCES}
+	go build ${LDFLAGS} -o ${BINARY} ./cli
 
 .PHONY: install
 install:
-	go install ${LDFLAGS} ./...
+	go install ${LDFLAGS} ./cli
 
 .PHONY: clean
 clean:

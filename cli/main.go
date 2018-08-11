@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	recreate "github.com/fallafeljan/docker-recreate/lib"
+	recreate "github.com/fallafeljan/docker-recreate"
 	docker "github.com/fsouza/go-dockerclient"
 	homedir "github.com/mitchellh/go-homedir"
 )
