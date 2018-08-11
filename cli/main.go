@@ -77,7 +77,7 @@ func main() {
 	recreation, err := context.Recreate(
 		args.containerID,
 		args.imageTag,
-		&recreate.ContainerOptions{},
+		recreate.ContainerOptions{},
 	)
 	checkError(err)
 

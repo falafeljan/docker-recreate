@@ -19,7 +19,7 @@ type ContainerOptions struct {
 func (c Context) Recreate(
 	containerID string,
 	imageTag string,
-	containerOptions *ContainerOptions,
+	containerOptions ContainerOptions,
 ) (recreation *Recreation, err error) {
 	client := c.client
 	dockerOptions := c.options
