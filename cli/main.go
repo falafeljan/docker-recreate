@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	recreate "github.com/fallafeljan/docker-recreate"
-	docker "github.com/fsouza/go-dockerclient"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -66,17 +65,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	client, err := docker.NewClientFromEnv()
-	checkError(err)
-
 	args, err := parseArgs(os.Args)
 	checkError(err)
 
 	conf, _ := parseConf()
 	checkError(err)
 
-	recreation, err := recreate.RecreateWithClient(
-		client,
+	recreation, err := recreate.Recreate(
 		args.containerID,
 		args.imageTag,
 		createOptions(&args, conf))
