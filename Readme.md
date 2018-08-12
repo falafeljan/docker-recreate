@@ -9,7 +9,7 @@ Luckily, [@lanrat](https://github.com/lanrat) wrote a small Gist doing exactly t
 
 ## Usage
 
-You'll need [Go](https://golang.org/) and [`dep`](https://github.com/golang/dep). To install, check out the code via `go get github.com/fallafeljan/docker-recreate`. Install via `make`. Then, run it:
+You'll need [Go](https://golang.org/) and [`dep`](https://github.com/golang/dep). To install, check out the code via `go get github.com/falafeljan/docker-recreate`. Install via `make`. Then, run it:
 
 ```
 docker-recreate [-p] [-d] id [tag]
