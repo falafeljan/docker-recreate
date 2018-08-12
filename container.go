@@ -49,8 +49,7 @@ func cloneContainerLinks(container *docker.Container) (
 
 func cloneContainerOptions(
 	container *docker.Container,
-	repository string,
-	imageTag string,
+	imageURL string,
 	containerName string,
 ) (
 	options docker.CreateContainerOptions,
@@ -58,7 +57,7 @@ func cloneContainerOptions(
 ) {
 	options.Name = containerName
 	options.Config = container.Config
-	options.Config.Image = repository + ":" + imageTag
+	options.Config.Image = imageURL
 	options.HostConfig = container.HostConfig
 	options.HostConfig.VolumesFrom = []string{container.ID}
 

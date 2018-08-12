@@ -12,10 +12,19 @@ type ImageSpec struct {
 	repository string
 }
 
-func parseImageName(imageName string) (imageSpec *ImageSpec) {
+func generateImageURL(spec ImageSpec) string {
+	if spec.tag == "" {
+		return spec.repository
+	}
+
+	return spec.repository + ":" + spec.tag
+}
+
+func parseImageName(imageName string) (imageSpec ImageSpec) {
 	registry := ""
 	name := imageName
-	tag := "latest"
+	tag := ""
+	repository := ""
 
 	slashIndex := strings.Index(name, "/")
 
@@ -32,12 +41,19 @@ func parseImageName(imageName string) (imageSpec *ImageSpec) {
 		tag = fullName[(colonIndex + 1):]
 	}
 
-	return &ImageSpec{
-		registry: registry,
-		name:     name,
-		tag:      tag,
-		repository: strings.Join([]string{
+	if registry != "" {
+		repository = strings.Join([]string{
 			registry,
 			name},
-			"/")}
+			"/")
+	} else {
+		repository = name
+	}
+
+	return ImageSpec{
+		registry:   registry,
+		name:       name,
+		tag:        tag,
+		repository: repository,
+	}
 }
