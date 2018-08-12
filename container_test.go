@@ -16,7 +16,13 @@ func testEquality(a []string, b []string) bool {
 	}
 
 	for i := range a {
-		if a[i] != b[i] {
+		if !testContains(b, a[i]) {
+			return false
+		}
+	}
+
+	for j := range b {
+		if !testContains(a, b[j]) {
 			return false
 		}
 	}
@@ -24,19 +30,33 @@ func testEquality(a []string, b []string) bool {
 	return true
 }
 
+func testContains(a []string, b string) bool {
+	for i := range a {
+		if a[i] == b {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestMergeContainerEnv(t *testing.T) {
 	env := make(map[string]string)
 	env["BAR"] = "baz123"
 	env["FOO"] = "BAR"
+	env["BAZ"] = "foo"
 
 	config := docker.CreateContainerOptions{
 		Config: &docker.Config{
-			Env: []string{"BAZ=bar"},
+			Env: []string{
+				"BAZ=bar",
+				"BAZ=123",
+			},
 		},
 	}
 
 	expected := []string{
-		"BAZ=bar",
+		"BAZ=foo",
 		"BAR=baz123",
 		"FOO=BAR",
 	}
