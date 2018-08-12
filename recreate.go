@@ -54,8 +54,7 @@ func (c Context) Recreate(
 
 	cloneOptions, err := cloneContainerOptions(
 		previousContainer,
-		imageSpec.repository,
-		imageSpec.tag,
+		generateImageURL(imageSpec),
 		temporaryName)
 
 	if err != nil {
