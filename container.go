@@ -67,6 +67,36 @@ func cloneContainerOptions(
 	return options, err
 }
 
+func cloneNetworks(
+	client *docker.Client,
+	fromContainer *docker.Container,
+	toContainer *docker.Container,
+) error {
+	if toContainer.NetworkSettings == nil {
+		toContainer.NetworkSettings = &docker.NetworkSettings{}
+	}
+
+	if toContainer.NetworkSettings.Networks == nil {
+		toContainer.NetworkSettings.Networks = make(map[string]docker.ContainerNetwork)
+	}
+
+	for name := range fromContainer.NetworkSettings.Networks {
+		if _, ok := toContainer.NetworkSettings.Networks[name]; ok {
+			continue
+		}
+
+		err := client.ConnectNetwork(name, docker.NetworkConnectionOptions{
+			Container: toContainer.ID,
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func generateEnvMap(envArray []string) map[string]string {
 	envMap := make(map[string]string)
 
