@@ -44,7 +44,6 @@ func (c Context) Recreate(
 		err = client.PullImage(
 			pullOpts,
 			auth)
-
 		if err != nil {
 			return nil, err
 		}
@@ -56,14 +55,17 @@ func (c Context) Recreate(
 		previousContainer,
 		generateImageURL(imageSpec),
 		temporaryName)
-
 	if err != nil {
 		return nil, err
 	}
 
 	cloneOptions.Config.Env = mergeContainerEnv(cloneOptions, containerOptions.Env)
 	newContainer, err := client.CreateContainer(cloneOptions)
+	if err != nil {
+		return nil, err
+	}
 
+	err = cloneNetworks(client, previousContainer, newContainer)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,6 @@ func (c Context) Recreate(
 	err = client.RenameContainer(docker.RenameContainerOptions{
 		ID:   previousContainer.ID,
 		Name: recentName})
-
 	if err != nil {
 		return nil, err
 	}
@@ -79,20 +80,17 @@ func (c Context) Recreate(
 	err = client.RenameContainer(docker.RenameContainerOptions{
 		ID:   newContainer.ID,
 		Name: previousContainer.Name})
-
 	if err != nil {
 		return nil, err
 	}
 
 	if previousContainer.State.Running {
 		err = client.StopContainer(previousContainer.ID, 10)
-
 		if err != nil {
 			return nil, err
 		}
 
 		err = client.StartContainer(newContainer.ID, newContainer.HostConfig)
-
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +100,6 @@ func (c Context) Recreate(
 		err = client.RemoveContainer(docker.RemoveContainerOptions{
 			ID:            previousContainer.ID,
 			RemoveVolumes: false})
-
 		if err != nil {
 			return nil, err
 		}
