@@ -58,6 +58,7 @@ func cloneContainerOptions(
 	options.Name = containerName
 	options.Config = container.Config
 	options.Config.Image = imageURL
+	options.Config.Labels = container.Config.Labels
 	options.HostConfig = container.HostConfig
 	options.HostConfig.VolumesFrom = []string{container.ID}
 
